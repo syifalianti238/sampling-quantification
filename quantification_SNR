@@ -1,0 +1,56 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy as sp
+
+# Generate sine wave
+def genSine(f0, fs, dur):
+    t = np.arange(0,100,0.1)
+    amp=0.5
+    sinusoid = amp*np.sin(2*np.pi*t*(f0/fs))
+    return t, sinusoid
+
+#Generate noise
+def genNoise(sinusoid, noise_amp=1):
+    return sinusoid + (np.random.random(len(sinusoid))-0.5)*2*noise_amp
+
+time, sinus = genSine(5,100,100)
+sig_noise = genNoise(sinus, noise_amp=0.1)
+N = len(sig_noise)  # length of signal
+
+# generate signal
+x = sig_noise
+
+plt.plot(time, sig_noise)
+plt.title("Noisy Signal")
+plt.show()
+# quantize signal
+Q=100# or can be replaced with the length of signal to improve the accuracy of quantization [len(x)]
+xi = np.round(Q * x)
+xQ = 1/Q * xi   #quantized signal
+e = xQ - x      #signal error
+
+# plot (quantized) signals
+fig, ax1 = plt.subplots(figsize=(10,4))
+ax2 = ax1.twinx()
+
+ax1.plot(x, 'r', label=r'discrete signal $x[k]$')
+ax1.plot(xQ, 'b', label=r'quantized signal $x_Q[k]$')
+ax1.plot(e, 'g', label=r'quantization error $e[k]$')
+ax1.set_xlabel('k')
+ax1.set_ylabel(r'$x[k]$, $x_Q[k]$, $e[k]$')
+ax1.axis([0, N, -1.2, 1.2])
+ax1.legend()
+
+ax2.set_ylim([-3.6, 3.6])
+ax2.set_ylabel('quantization index')
+ax2.grid()
+
+# Calculate energy over each window [J]
+sqx=np.square(x)
+p = np.sum(sqx)
+sqe=np.square(e)
+pe = np.sum(sqe)
+
+# Estimate SNR
+SNR = 10*np.log10(p/pe)
+print('SNR = %f dB' %SNR)
