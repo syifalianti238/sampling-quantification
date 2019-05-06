@@ -1,0 +1,70 @@
+%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.signal as sig
+
+# Generate sine wave
+def genSine(f0, fs, dur):
+    t = np.arange(0,100,0.1)
+    amp=0.5
+    sinusoid = amp*np.sin(2*np.pi*t*(f0/fs))
+    return t, sinusoid
+
+#Generate noise
+def genNoise(sinusoid, noise_amp=1):
+    return sinusoid + (np.random.random(len(sinusoid))-0.5)*2*noise_amp
+
+time, sinus = genSine(5,100,100)
+sig_noise = genNoise(sinus, noise_amp=0.1)
+N = len(sig_noise)  # length of signal
+
+# generate signal
+x = sig_noise
+
+plt.plot(time, sig_noise)
+plt.title("Noisy Signal")
+plt.show()
+# quantize signal
+xi = np.round(100 * sig_noise)
+xQ = 1/100 * xi   #quantized signal
+e = xQ - sig_noise      #signal error
+
+
+w = len(xQ)  # wordlength of the quantized signal
+L = 2**np.arange(1,10)  # oversampling factors
+
+N = len(x)  # length of signals
+Om0 = 100*2*np.pi/N  # frequency of harmonic signal
+Q = 1/(2**(w-1))  # quantization step
+
+
+def SNR_oversampled_ADC(L):
+    x = sig_noise
+    xu = (1-Q)*sig_noise*np.arange(N*L)/L
+    # quantize signal
+    xQu = 1/L*xu
+    # low-pass filtering and decimation
+    xQ = sig.resample(xQu, N)
+    # estimate SNR
+    e = xQu - x
+
+    return 20*np.log10((np.var(xQ)/np.var(e)))
+
+# compute SNR for oversampled ADC
+SNR = [SNR_oversampled_ADC(1) for l in L]
+
+  
+# plot result
+plt.plot(x, 'r', label=r'discrete signal $x[k]$')
+plt.plot(xQ, 'b', label=r'quantized signal $x_Q[k]$')
+plt.plot(e, 'g', label=r'quantization error $e[k]$')
+plt.axis([0, N, -1.2, 1.2])
+plt.legend()
+
+plt.figure(figsize=(10, 4))
+plt.semilogx(L, SNR, label='with oversampling')
+plt.xlabel(r'oversampling factor $L$')
+plt.ylabel(r'SNR in dB')
+plt.legend(loc='upper left')
+plt.grid()
+plt.show()
