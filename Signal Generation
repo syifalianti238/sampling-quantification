@@ -1,0 +1,35 @@
+%matplotlib inline
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+# Generate sine wave
+def genSine(f0, fs, dur):
+    t = np.arange(0,100,0.1)
+    amp=0.5
+    sinusoid = amp*np.sin(2*np.pi*t*(f0/fs))
+    return t, sinusoid
+
+#Generate noise
+def genNoise(sinusoid, noise_amp=1):
+    return sinusoid + (np.random.random(len(sinusoid))-0.5)*2*noise_amp
+
+time, sinus = genSine(10,100,100)
+sig_noise = genNoise(sinus, noise_amp=0.25)
+
+# Plot Original Signal
+plt.figure(figsize=(16,4))
+plt.subplot(121)
+plt.plot(time, sinus)
+plt.title("Original Signal")
+plt.xlabel('Time')
+plt.ylabel('Amplitude = sin(time)')
+
+# Plot Noisy Signal
+plt.subplot(122)
+plt.plot(time, sig_noise)
+plt.title("Noisy Signal")
+plt.xlabel('Time')
+plt.ylabel('Amplitude = sin(time)')
+
+# Display the sine wave
+plt.show()
